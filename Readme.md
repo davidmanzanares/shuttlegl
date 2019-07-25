@@ -1,6 +1,6 @@
 # ShuttleGL
 
-ShuttleGL is JS collection of tools to develop 3D graphics, including small WebGL abstractions.
+ShuttleGL is a JS collection of tools to develop 3D graphics, including small WebGL abstractions.
 
 ShuttleGL is **not** a WebGL framework nor a thick layer on top of WebGL.
 
