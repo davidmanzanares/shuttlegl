@@ -1,0 +1,27 @@
+{
+  "name": "shuttlegl",
+  "version": "0.0.1",
+  "main": "src/index.js",
+  "files": [
+    "src/index.js"
+  ],
+  "author": "David Manzanares Miguel",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-config-semistandard": "^13.0.0",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.17.2",
+    "eslint-plugin-node": "^9.1.0",
+    "eslint-plugin-promise": "^4.1.1",
+    "eslint-plugin-standard": "^4.0.0"
+  },
+  "scripts": {
+    "lint": "eslint src/",
+    "lint:fix": "eslint --fix src/"
+  },
+  "dependencies": {
+    "math.gl": "^2.3.3"
+  }
+}
