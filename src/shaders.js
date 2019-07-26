@@ -1,3 +1,57 @@
+export const lineVertexGLSL =
+`#version 300 es
+
+precision highp float;
+
+in vec3 vertexA;
+in vec3 vertexB;
+
+uniform mat4 MVP;
+uniform vec2 lineSize;
+
+out vec3 va;
+out vec3 vb;
+
+void main(void) {
+  int id = gl_VertexID % 3;
+  vec2 uv = vec2(0.);
+  if (id %3 == 2){
+    vec3 dir = normalize(vertexA-vertexB);
+    vec4 projectedDir = MVP * vec4(dir, 0.);
+    vec2 dir2D = normalize(projectedDir.xy);
+    uv=dir2D;
+    if (gl_VertexID % 6 == 4){
+      uv*=-1.;
+    }
+  }
+  vec4 vertex = (MVP * vec4(vertexA, 1.));
+
+  va = vertexA;
+  vb = vertexB;
+
+  gl_Position = vertex + vec4(uv*2.*0.02*vertex.w, 0., 0.);
+}
+`;
+
+export const lineFragmentGLSL =
+`#version 300 es
+
+precision highp float;
+
+in vec3 va;
+in vec3 vb;
+
+uniform vec4 color;
+
+out vec4 outColor;
+
+void main(void) {
+  //outColor = d<0.49? color : vec4(0.);
+  outColor = vec4(abs(normalize(va-vb)), 1.);
+}
+`;
+
+
 export const triangleFillVertexGLSL =
 `#version 300 es
 

@@ -1,5 +1,5 @@
 import Cache from './cache';
-import { triangleFillVertexGLSL, triangleFillFragmentGLSL, pointVertexGLSL, pointFragmentGLSL } from './shaders';
+import { triangleFillVertexGLSL, triangleFillFragmentGLSL, pointVertexGLSL, pointFragmentGLSL, lineVertexGLSL, lineFragmentGLSL } from './shaders';
 import { Matrix3, Matrix4, Vector3 } from 'math.gl';
 
 // Parts of the code copied and/or modified from https://github.com/CartoDB/carto-vl/blob/master/src/renderer/shaders/utils.js
@@ -10,7 +10,7 @@ const programCache = new Cache();
 let programID = 1;
 
 class VAO {
-    constructor(gl, vertexList) {
+    constructor(gl, vertexList, ...extraVertexAttributes) {
         this.gl = gl;
         this.vao = gl.createVertexArray();
         gl.bindVertexArray(this.vao);
@@ -21,6 +21,16 @@ class VAO {
         this.vertexCount = vertexList.length / 3;
         gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(0);
+
+        this.extraVertexBuffers = [];
+        extraVertexAttributes.forEach((extraVertexAttrib, i) => {
+            this.extraVertexBuffers.push(gl.createBuffer());
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.extraVertexBuffers[i]);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(extraVertexAttrib), gl.STATIC_DRAW);
+            // this.vertexCount = extraVertexAttrib.length / 3;
+            gl.vertexAttribPointer(i, 3, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(i);
+        });
     }
     render() {
         this.gl.bindVertexArray(this.vao);
@@ -129,6 +139,74 @@ export function createVAOfromPointList(gl, pointList) {
     }
     return new VAO(gl, triangleList);
 }
+
+// Create line VAO => 2 triangles per line, other vertex in second vertexattrib
+// Create line Shader => move vertex by vertexID using line direction normal with matrix
+// distance to ending points, distance to ray
+export function createVAOfromLineList(gl, lineList) {
+    let triangleList = [];
+    let triangleListB = [];
+    for (let i = 0; i < lineList.length / 6; i++) {
+        triangleList.push(
+            lineList[6 * i + 0],
+            lineList[6 * i + 1],
+            lineList[6 * i + 2],
+
+            lineList[6 * i + 3],
+            lineList[6 * i + 4],
+            lineList[6 * i + 5],
+
+            lineList[6 * i + 3],
+            lineList[6 * i + 4],
+            lineList[6 * i + 5],
+
+
+            lineList[6 * i + 3],
+            lineList[6 * i + 4],
+            lineList[6 * i + 5],
+
+            lineList[6 * i + 0],
+            lineList[6 * i + 1],
+            lineList[6 * i + 2],
+
+            lineList[6 * i + 0],
+            lineList[6 * i + 1],
+            lineList[6 * i + 2],
+        );
+        triangleListB.push(
+            lineList[6 * i + 3],
+            lineList[6 * i + 4],
+            lineList[6 * i + 5],
+
+            lineList[6 * i + 0],
+            lineList[6 * i + 1],
+            lineList[6 * i + 2],
+
+            lineList[6 * i + 0],
+            lineList[6 * i + 1],
+            lineList[6 * i + 2],
+
+
+            lineList[6 * i + 0],
+            lineList[6 * i + 1],
+            lineList[6 * i + 2],
+
+            lineList[6 * i + 3],
+            lineList[6 * i + 4],
+            lineList[6 * i + 5],
+
+            lineList[6 * i + 3],
+            lineList[6 * i + 4],
+            lineList[6 * i + 5],
+        );
+    }
+    return new VAO(gl, triangleList, triangleListB);
+}
+
+export function createShaderLine(gl) {
+    return new Shader(gl, lineVertexGLSL, lineFragmentGLSL);
+}
+
 
 export function createShaderPoint(gl) {
     return new Shader(gl, pointVertexGLSL, pointFragmentGLSL);
