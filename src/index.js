@@ -28,8 +28,9 @@ class VAO {
             gl.bindBuffer(gl.ARRAY_BUFFER, this.extraVertexBuffers[i]);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(extraVertexAttrib), gl.STATIC_DRAW);
             // this.vertexCount = extraVertexAttrib.length / 3;
-            gl.vertexAttribPointer(i, 3, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(i);
+            // TODO support non 3-dimensions, float extra attribs
+            gl.vertexAttribPointer(i+1, 3, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(i+1);
         });
     }
     render() {

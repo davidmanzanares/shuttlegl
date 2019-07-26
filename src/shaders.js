@@ -13,23 +13,28 @@ out vec3 va;
 out vec3 vb;
 
 void main(void) {
-  int id = gl_VertexID % 3;
+  int id = gl_VertexID;
   vec2 uv = vec2(0.);
-  if (id %3 == 2){
-    vec3 dir = normalize(vertexA-vertexB);
-    vec4 projectedDir = MVP * vec4(dir, 0.);
-    vec2 dir2D = normalize(projectedDir.xy);
-    uv=dir2D;
-    if (gl_VertexID % 6 == 4){
-      uv*=-1.;
-    }
+  
+  vec3 dir = normalize(vertexB-vertexA);
+  vec4 projectedDir = MVP * vec4(dir, 0.);
+  vec2 dir2D = normalize(projectedDir.xy);
+  vec2 n = vec2(dir2D.y, -dir2D.x);
+  uv=n;
+  if (id % 6 == 2 || id % 6 == 5){
+    uv=-n;
+  }
+  if (id % 3 < 3){
+    uv -= dir2D;
+  }else{
+    uv += dir2D;
   }
   vec4 vertex = (MVP * vec4(vertexA, 1.));
 
   va = vertexA;
   vb = vertexB;
 
-  gl_Position = vertex + vec4(uv*2.*0.02*vertex.w, 0., 0.);
+  gl_Position = vertex + vec4(uv*2.*lineSize*vertex.w, 0., 0.);
 }
 `;
 
@@ -47,7 +52,12 @@ out vec4 outColor;
 
 void main(void) {
   //outColor = d<0.49? color : vec4(0.);
-  outColor = vec4(abs(normalize(va-vb)), 1.);
+  // TODO: antialiasing and line ending
+  //vec3 d = normalize(vb-va);
+  // get va & vb in vec2 space
+  // compute point to line distance in 2D
+  // https://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
+  outColor = vec4(color);
 }
 `;
 
