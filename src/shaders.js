@@ -25,6 +25,50 @@ void main(void) {
 
 `;
 
+export const pointVertexGLSL =
+`#version 300 es
+
+precision highp float;
+
+in vec3 vertex;
+
+uniform mat4 MVP;
+uniform vec2 pointSize;
+
+out vec2 uv;
+
+void main(void) {
+  int id = gl_VertexID % 3;
+  if (id == 0){
+    uv = vec2(0., 1.);
+  } else if (id == 1){
+    uv = vec2(0.866, -0.5);
+  } else {
+    uv = vec2(-0.866, -0.5);
+  }
+  vec4 vertex = (MVP * vec4(vertex, 1.));
+  gl_Position = vertex + vec4(uv*2.*pointSize*vertex.w, 0., 0.);
+}
+`;
+
+export const pointFragmentGLSL =
+`#version 300 es
+
+precision highp float;
+
+in vec2 uv;
+
+uniform vec4 color;
+
+out vec4 outColor;
+
+void main(void) {
+  float d = length(uv);
+  outColor = d<0.49? color : vec4(0.);
+}
+
+`;
+
 export const vertexEntireScreen = `#version 300 es
 
 precision highp float;

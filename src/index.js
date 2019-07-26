@@ -1,5 +1,5 @@
 import Cache from './cache';
-import { triangleFillVertexGLSL, triangleFillFragmentGLSL } from './shaders';
+import { triangleFillVertexGLSL, triangleFillFragmentGLSL, pointVertexGLSL, pointFragmentGLSL } from './shaders';
 import { Matrix3, Matrix4, Vector3 } from 'math.gl';
 
 // Parts of the code copied and/or modified from https://github.com/CartoDB/carto-vl/blob/master/src/renderer/shaders/utils.js
@@ -38,7 +38,21 @@ class Shader {
     }
     uniform(name, value) {
         const location = this.gl.getUniformLocation(this.program, name);
-        this.gl.uniformMatrix4fv(location, false, value);
+        if (typeof value === 'number') {
+            this.gl.uniform1f(location, value);
+        } else if (value.length === 2) {
+            this.gl.uniform2f(location, value[0], value[1]);
+        } else if (value.length === 3) {
+            this.gl.uniform3f(location, ...value);
+        } else if (value.length === 4) {
+            this.gl.uniform4f(location, ...value);
+        } else if (value.length === 9) {
+            this.gl.uniformMatrix3fv(location, false, value);
+        } else if (value.length === 16) {
+            this.gl.uniformMatrix4fv(location, false, value);
+        } else {
+            throw new Error(`Cannot deduce WebGL uniform call for the provided value`);
+        }
     }
 }
 
@@ -63,10 +77,10 @@ class View {
         this.camera.add(movement);
     }
 
-    rotateHorizontally(dh){
+    rotateHorizontally(dh) {
         this.horizontalRotation = (this.horizontalRotation + dh) % (Math.PI * 2);
     }
-    rotateVertically(dv){
+    rotateVertically(dv) {
         this.verticalRotation = clamp(this.verticalRotation + dv, -Math.PI * 0.9, Math.PI * 0.9);
     }
 
@@ -83,7 +97,7 @@ class View {
         return new Vector3(0, 1, 0);
     }
 
-    getViewMatrix(){
+    getViewMatrix() {
         const view = {
             eye: this.camera,
             center: this.getForwardDirection().add(this.camera),
@@ -95,7 +109,29 @@ class View {
 }
 
 export function createVAOfromPolygonList(gl, polygonList) {
-    return new VAO(gl, polygonList[0]);
+    polygonList = polygonList[0];
+    return new VAO(gl, polygonList);
+}
+export function createVAOfromPointList(gl, pointList) {
+    let triangleList = [];
+    for (let i = 0; i < pointList.length / 3; i++) {
+        triangleList.push(
+            pointList[3 * i],
+            pointList[3 * i + 1],
+            pointList[3 * i + 2],
+            pointList[3 * i],
+            pointList[3 * i + 1],
+            pointList[3 * i + 2],
+            pointList[3 * i],
+            pointList[3 * i + 1],
+            pointList[3 * i + 2],
+        );
+    }
+    return new VAO(gl, triangleList);
+}
+
+export function createShaderPoint(gl) {
+    return new Shader(gl, pointVertexGLSL, pointFragmentGLSL);
 }
 
 export function createShaderPolygonFill(gl) {
@@ -132,7 +168,7 @@ export function compileProgram(gl, glslvertexShader, glslfragmentShader) {
     return shader.program;
 }
 
-export function createView(...args){
+export function createView(...args) {
     return new View(...args)
 }
 
@@ -156,6 +192,6 @@ function compileShader(gl, sourceCode, type) {
     return shader;
 }
 
-export function clamp (x, min, max) {
+export function clamp(x, min, max) {
     return Math.max(Math.min(x, max), min);
 }
