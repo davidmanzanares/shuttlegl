@@ -1,6 +1,7 @@
 import Cache from './cache';
 import { triangleFillVertexGLSL, triangleFillFragmentGLSL, pointVertexGLSL, pointFragmentGLSL, lineVertexGLSL, lineFragmentGLSL } from './shaders';
 import { Matrix3, Matrix4, Vector3 } from 'math.gl';
+import { earclip } from './earclip';
 
 // Parts of the code copied and/or modified from https://github.com/CartoDB/carto-vl/blob/master/src/renderer/shaders/utils.js
 // licensed under the BSD-3 license
@@ -121,7 +122,8 @@ class View {
 
 export function createVAOfromPolygonList(gl, polygonList) {
     polygonList = polygonList[0];
-    return new VAO(gl, polygonList);
+    const triangleList = earclip(polygonList);
+    return new VAO(gl, triangleList);
 }
 export function createVAOfromPointList(gl, pointList) {
     let triangleList = [];

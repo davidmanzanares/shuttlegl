@@ -81,10 +81,12 @@ export const triangleFillFragmentGLSL =
 
 precision highp float;
 
+uniform vec4 color;
+
 out vec4 outColor;
 
 void main(void) {
-    outColor = vec4(1.);
+    outColor = color;
 }
 
 `;
