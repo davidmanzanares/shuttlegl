@@ -55,7 +55,7 @@ export function earclip(polygon) {
     const triangles = [];
     while (true) {
         if (earListHead == null) {
-            throw new Error("Error at triangulate(). earListHead is null.");
+            throw new Error("Invalid input polygon vertex order");
         }
         const eartip = earListHead.v;
 

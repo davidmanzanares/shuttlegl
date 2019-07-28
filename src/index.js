@@ -30,8 +30,8 @@ class VAO {
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(extraVertexAttrib), gl.STATIC_DRAW);
             // this.vertexCount = extraVertexAttrib.length / 3;
             // TODO support non 3-dimensions, float extra attribs
-            gl.vertexAttribPointer(i+1, 3, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(i+1);
+            gl.vertexAttribPointer(i + 1, 3, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(i + 1);
         });
     }
     render() {
@@ -121,8 +121,7 @@ class View {
 }
 
 export function createVAOfromPolygonList(gl, polygonList) {
-    polygonList = polygonList[0];
-    const triangleList = earclip(polygonList);
+    const triangleList = polygonList.flatMap(polygon => earclip(polygon));
     return new VAO(gl, triangleList);
 }
 export function createVAOfromPointList(gl, pointList) {
@@ -215,7 +214,7 @@ export function createShaderPoint(gl) {
     return new Shader(gl, pointVertexGLSL, pointFragmentGLSL);
 }
 
-export function createShaderPolygonFill(gl) {
+export function createShaderPolygon(gl) {
     return new Shader(gl, triangleFillVertexGLSL, triangleFillFragmentGLSL);
 }
 
@@ -271,6 +270,95 @@ function compileShader(gl, sourceCode, type) {
     shaderCache.set(gl, sourceCode, shader);
 
     return shader;
+}
+
+class MeshRenderer {
+    constructor(gl, polygonList) {
+        this.gl = gl;
+        this.pointShader = createShaderPoint(gl);
+        this.lineShader = createShaderLine(gl);
+        this.polygonShader = createShaderPolygon(gl);
+
+        const points = polygonList.reduce((acc, x) => acc.concat(x));
+        this.pointVAO = createVAOfromPointList(gl, points);
+
+        const lines = [];
+        polygonList.forEach(vertices => {
+            for (let i = 0; i < vertices.length / 3; i++) {
+                lines.push(
+                    vertices[3 * i],
+                    vertices[3 * i + 1],
+                    vertices[3 * i + 2],
+                )
+                let j = i + 1;
+                if (j === vertices.length / 3) {
+                    j = 0;
+                }
+                lines.push(
+                    vertices[3 * j],
+                    vertices[3 * j + 1],
+                    vertices[3 * j + 2],
+                )
+            }
+        });
+        this.lineVAO = createVAOfromLineList(gl, lines);
+
+        const triangleList = polygonList.flatMap(polygon => earclip(polygon));
+        const trianguleLines = [];
+        for (let i = 0; i < triangleList.length / 9; i++) {
+            trianguleLines.push(
+                triangleList[9 * i + 0],
+                triangleList[9 * i + 1],
+                triangleList[9 * i + 2],
+                triangleList[9 * i + 3],
+                triangleList[9 * i + 4],
+                triangleList[9 * i + 5],
+
+                triangleList[9 * i + 3],
+                triangleList[9 * i + 4],
+                triangleList[9 * i + 5],
+                triangleList[9 * i + 6],
+                triangleList[9 * i + 7],
+                triangleList[9 * i + 8],
+
+                triangleList[9 * i + 6],
+                triangleList[9 * i + 7],
+                triangleList[9 * i + 8],
+                triangleList[9 * i + 0],
+                triangleList[9 * i + 1],
+                triangleList[9 * i + 2],
+            )
+        }
+        this.trianguleLinesVAO = createVAOfromLineList(gl, trianguleLines);
+
+        this.polygonVAO = createVAOfromPolygonList(gl, polygonList);
+    }
+    render(modelViewProjectionMatrix, displayWidth, displayHeight) {
+        this.pointShader.use();
+        this.pointShader.uniform('MVP', modelViewProjectionMatrix);
+        this.pointShader.uniform('pointSize', [1 / displayWidth, 1 / displayHeight].map(x => x * 14.));
+        this.pointShader.uniform('color', [0.1, 0.1, 0.1, 1]);
+        this.pointVAO.render();
+
+        this.lineShader.use();
+        this.lineShader.uniform('MVP', modelViewProjectionMatrix);
+        this.lineShader.uniform('lineSize', [1 / displayWidth, 1 / displayHeight].map(x => x * 2.));
+        this.lineShader.uniform('color', [0.9, 0.1, 0.1, 0.8]);
+        this.lineVAO.render();
+
+        this.lineShader.uniform('lineSize', [1 / displayWidth, 1 / displayHeight].map(x => x * 3.));
+        this.lineShader.uniform('color', [0., 0.9, 0.3, 0.3]);
+        this.trianguleLinesVAO.render();
+
+        this.polygonShader.use();
+        this.polygonShader.uniform('MVP', modelViewProjectionMatrix);
+        this.polygonShader.uniform('color', [0.3, 0.3, 0.6, 0.5]);
+        this.polygonVAO.render();
+    }
+}
+
+export function createMeshRenderer(gl, polygonList) {
+    return new MeshRenderer(gl, polygonList);
 }
 
 export function clamp(x, min, max) {
