@@ -2,7 +2,39 @@
 export function earclip(polygon) {
     //Based on https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
     //O(N^2)
-    let vertexListHead = createDoublyLinkedListFrom3DvertexArray(polygon);
+
+    let xVariation = 0;
+    let yVariation = 0;
+    let zVariation = 0;
+    const point = {
+        x: polygon[0],
+        y: polygon[1],
+        z: polygon[2],
+    }
+    for (let i = 1; i < polygon.length / 3; i++) {
+        const dx = polygon[3 * i] - point.x;
+        const dy = polygon[3 * i + 1] - point.y;
+        const dz = polygon[3 * i + 2] - point.z;
+        xVariation += dx * dx;
+        yVariation += dy * dy;
+        zVariation += dz * dz;
+    }
+    let ignoredPlane;
+    if (xVariation < zVariation) {
+        if (xVariation < yVariation) {
+            ignoredPlane = 'x';
+        } else {
+            ignoredPlane = 'y';
+        }
+    } else {
+        if (zVariation < yVariation) {
+            ignoredPlane = 'z';
+        } else {
+            ignoredPlane = 'y';
+        }
+    }
+
+    let vertexListHead = createDoublyLinkedListFrom3DvertexArray(polygon, ignoredPlane);
 
     //Make earness doubled-linked list (not cyclic)
     let earListHead = null;
@@ -31,10 +63,22 @@ export function earclip(polygon) {
         const ear2 = eartip;
         const ear3 = eartip.next;
         //Push eartip to triangle list, the order is important to enable face culling
-        triangles.push(
-            ear3.z, ear3.y, ear3.x,
-            ear2.z, ear2.y, ear2.x,
-            ear1.z, ear1.y, ear1.x);
+        if (ignoredPlane === 'x') {
+            triangles.push(
+                ear3.z, ear3.y, ear3.x,
+                ear2.z, ear2.y, ear2.x,
+                ear1.z, ear1.y, ear1.x);
+        } else if (ignoredPlane === 'y') {
+            triangles.push(
+                ear3.x, ear3.z, ear3.y,
+                ear2.x, ear2.z, ear2.y,
+                ear1.x, ear1.z, ear1.y);
+        } else {
+            triangles.push(
+                ear3.x, ear3.y, ear3.z,
+                ear2.x, ear2.y, ear2.z,
+                ear1.x, ear1.y, ear1.z);
+        }
 
         //Check finish condition
         numVertices--;
@@ -60,18 +104,40 @@ export function earclip(polygon) {
 }
 
 // Returns the head of a doubly linked list from a list of the form [v0x,v0y,v0z, v1x,v1y,v1z...]
-function createDoublyLinkedListFrom3DvertexArray(array) {
+function createDoublyLinkedListFrom3DvertexArray(array, ignoredPlane) {
     const vertexListStorage = [];
+
     for (let i = 0; i < array.length / 3; i++) {
-        vertexListStorage[i] = {
-            x: array[3 * i + 2],
-            y: array[3 * i + 1],
-            z: array[3 * i + 0],
-            prev: null,
-            next: null,
-            earListNode: null,
-        };
+        if (ignoredPlane === 'x') {
+            vertexListStorage[i] = {
+                x: array[3 * i + 2],
+                y: array[3 * i + 1],
+                z: array[3 * i + 0],
+                prev: null,
+                next: null,
+                earListNode: null,
+            };
+        } else if (ignoredPlane === 'y') {
+            vertexListStorage[i] = {
+                x: array[3 * i + 0],
+                y: array[3 * i + 2],
+                z: array[3 * i + 1],
+                prev: null,
+                next: null,
+                earListNode: null,
+            };
+        } else {
+            vertexListStorage[i] = {
+                x: array[3 * i + 0],
+                y: array[3 * i + 1],
+                z: array[3 * i + 2],
+                prev: null,
+                next: null,
+                earListNode: null,
+            };
+        }
     }
+
     for (let i = 0; i < vertexListStorage.length; i++) {
         vertexListStorage[i].prev = vertexListStorage[mod(i - 1, vertexListStorage.length)];
         vertexListStorage[i].next = vertexListStorage[mod(i + 1, vertexListStorage.length)];
