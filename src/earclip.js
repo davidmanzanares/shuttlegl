@@ -1,38 +1,23 @@
+import { Vector3 } from "math.gl";
 
 export function earclip(polygon) {
     //Based on https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
     //O(N^2)
 
-    let xVariation = 0;
-    let yVariation = 0;
-    let zVariation = 0;
-    const point = {
-        x: polygon[0],
-        y: polygon[1],
-        z: polygon[2],
-    }
-    for (let i = 1; i < polygon.length / 3; i++) {
-        const dx = polygon[3 * i] - point.x;
-        const dy = polygon[3 * i + 1] - point.y;
-        const dz = polygon[3 * i + 2] - point.z;
-        xVariation += dx * dx;
-        yVariation += dy * dy;
-        zVariation += dz * dz;
-    }
-    let ignoredPlane;
-    if (xVariation < zVariation) {
-        if (xVariation < yVariation) {
-            ignoredPlane = 'x';
-        } else {
-            ignoredPlane = 'y';
-        }
-    } else {
-        if (zVariation < yVariation) {
-            ignoredPlane = 'z';
-        } else {
-            ignoredPlane = 'y';
-        }
-    }
+    const a = new Vector3(polygon[0], polygon[1], polygon[2]);
+    const b = new Vector3(polygon[3], polygon[4], polygon[5]);
+    const c = new Vector3(polygon[6], polygon[7], polygon[8]);
+
+    const u = new Vector3(b).sub(a);
+    const v = new Vector3(c).sub(b);
+
+    const cross = new Vector3(u).cross(v);
+    const crossAbs = cross.map(Math.abs);
+    const index = crossAbs.findIndex(x => x === Math.max(...crossAbs));
+    const ignoredPlane = index === 0 ?
+        'x'
+        : index === 1 ? 'y' : 'z';
+
 
     let vertexListHead = createDoublyLinkedListFrom3DvertexArray(polygon, ignoredPlane);
 
@@ -55,7 +40,7 @@ export function earclip(polygon) {
     const triangles = [];
     while (true) {
         if (earListHead == null) {
-            throw new Error("Invalid input polygon vertex order");
+            throw new Error("Invalid input polygon or internal error");
         }
         const eartip = earListHead.v;
 
@@ -138,6 +123,21 @@ function createDoublyLinkedListFrom3DvertexArray(array, ignoredPlane) {
         }
     }
 
+    // if the first polygon is clockwise, we need to reverse it
+    const a = new Vector3(vertexListStorage[0].x, vertexListStorage[0].y, 0);
+    const b = new Vector3(vertexListStorage[1].x, vertexListStorage[1].y, 0);
+    const c = new Vector3(vertexListStorage[2].x, vertexListStorage[2].y, 0);
+
+    const u = new Vector3(b).sub(a);
+    const v = new Vector3(c).sub(b);
+
+    const C = new Vector3(u).cross(v);
+    if (C.z > 0) {
+        vertexListStorage.reverse();
+    }
+    if (C.z == 0) {
+        throw new Error('Invalid input or internal error');
+    }
     for (let i = 0; i < vertexListStorage.length; i++) {
         vertexListStorage[i].prev = vertexListStorage[mod(i - 1, vertexListStorage.length)];
         vertexListStorage[i].next = vertexListStorage[mod(i + 1, vertexListStorage.length)];
