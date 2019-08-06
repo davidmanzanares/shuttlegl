@@ -334,26 +334,34 @@ class MeshRenderer {
         this.polygonVAO = createVAOfromPolygonList(gl, polygonList);
     }
     render(modelViewProjectionMatrix, displayWidth, displayHeight) {
-        this.pointShader.use();
-        this.pointShader.uniform('MVP', modelViewProjectionMatrix);
-        this.pointShader.uniform('pointSize', [1 / displayWidth, 1 / displayHeight].map(x => x * 14.));
-        this.pointShader.uniform('color', [0.1, 0.1, 0.1, 1]);
-        this.pointVAO.render();
+        if (this.pointVAO) {
+            this.pointShader.use();
+            this.pointShader.uniform('MVP', modelViewProjectionMatrix);
+            this.pointShader.uniform('pointSize', [1 / displayWidth, 1 / displayHeight].map(x => x * 14.));
+            this.pointShader.uniform('color', [0.01, 0.01, 0.01, 1]);
+            this.pointVAO.render();
+        }
 
-        this.lineShader.use();
-        this.lineShader.uniform('MVP', modelViewProjectionMatrix);
-        this.lineShader.uniform('lineSize', [1 / displayWidth, 1 / displayHeight].map(x => x * 2.));
-        this.lineShader.uniform('color', [0.9, 0.1, 0.1, 0.8]);
-        this.lineVAO.render();
+        if (this.lineVAO) {
+            this.lineShader.use();
+            this.lineShader.uniform('MVP', modelViewProjectionMatrix);
+            this.lineShader.uniform('lineSize', [1 / displayWidth, 1 / displayHeight].map(x => x * 2.));
+            this.lineShader.uniform('color', [0.9, 0.1, 0.01, 0.8]);
+            this.lineVAO.render();
+        }
 
-        this.lineShader.uniform('lineSize', [1 / displayWidth, 1 / displayHeight].map(x => x * 3.));
-        this.lineShader.uniform('color', [0., 0.9, 0.3, 0.3]);
-        this.trianguleLinesVAO.render();
+        if (this.trianguleLinesVAO) {
+            this.lineShader.uniform('lineSize', [1 / displayWidth, 1 / displayHeight].map(x => x * 0.));
+            this.lineShader.uniform('color', [0., 0.9, 0.3, 0.3]);
+            this.trianguleLinesVAO.render();
+        }
 
-        this.polygonShader.use();
-        this.polygonShader.uniform('MVP', modelViewProjectionMatrix);
-        this.polygonShader.uniform('color', [0.3, 0.3, 0.6, 0.5]);
-        this.polygonVAO.render();
+        if (this.polygonVAO) {
+            this.polygonShader.use();
+            this.polygonShader.uniform('MVP', modelViewProjectionMatrix);
+            this.polygonShader.uniform('color', [0.3, 0.3, 0.6, 0.1]);
+            this.polygonVAO.render();
+        }
     }
 }
 
