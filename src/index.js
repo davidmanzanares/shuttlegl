@@ -218,6 +218,10 @@ export function createShaderPolygon(gl) {
     return new Shader(gl, triangleFillVertexGLSL, triangleFillFragmentGLSL);
 }
 
+export function createShader(gl, vertexGLSL, fragmentGLSL){
+    return new Shader(gl, vertexGLSL, fragmentGLSL);
+}
+
 
 export function compileProgram(gl, glslvertexShader, glslfragmentShader) {
     const code = glslvertexShader + glslfragmentShader;
@@ -273,11 +277,27 @@ function compileShader(gl, sourceCode, type) {
 }
 
 class MeshRenderer {
-    constructor(gl, polygonList) {
+    constructor(gl, polygonList, {
+        showPoints = true,
+        showEdges = true,
+        showTriangulationLines = true,
+        showPolygons = true,
+
+        customPolygonShader = null,
+    }) {
         this.gl = gl;
         this.pointShader = createShaderPoint(gl);
         this.lineShader = createShaderLine(gl);
         this.polygonShader = createShaderPolygon(gl);
+
+
+        this.showPoints = showPoints;
+        this.showEdges = showEdges;
+        this.showTriangulationLines = showTriangulationLines;
+        this.showPolygons = showPolygons;
+
+        this.customPolygonShader = customPolygonShader; //new Shader(gl, triangleFillVertexGLSL, triangleFillFragmentGLSL);
+
 
         const points = polygonList.reduce((acc, x) => acc.concat(x));
         this.pointVAO = createVAOfromPointList(gl, points);
@@ -334,7 +354,7 @@ class MeshRenderer {
         this.polygonVAO = createVAOfromPolygonList(gl, polygonList);
     }
     render(modelViewProjectionMatrix, displayWidth, displayHeight) {
-        if (this.pointVAO) {
+        if (this.pointVAO && this.showPoints) {
             this.pointShader.use();
             this.pointShader.uniform('MVP', modelViewProjectionMatrix);
             this.pointShader.uniform('pointSize', [1 / displayWidth, 1 / displayHeight].map(x => x * 14.));
@@ -342,7 +362,7 @@ class MeshRenderer {
             this.pointVAO.render();
         }
 
-        if (this.lineVAO) {
+        if (this.lineVAO && this.showEdges) {
             this.lineShader.use();
             this.lineShader.uniform('MVP', modelViewProjectionMatrix);
             this.lineShader.uniform('lineSize', [1 / displayWidth, 1 / displayHeight].map(x => x * 2.));
@@ -350,23 +370,27 @@ class MeshRenderer {
             this.lineVAO.render();
         }
 
-        if (this.trianguleLinesVAO) {
-            this.lineShader.uniform('lineSize', [1 / displayWidth, 1 / displayHeight].map(x => x * 0.));
+        if (this.trianguleLinesVAO && this.showTriangulationLines) {
+            this.lineShader.use();
+            this.lineShader.uniform('lineSize', [1 / displayWidth, 1 / displayHeight].map(x => x * 0.5));
             this.lineShader.uniform('color', [0., 0.9, 0.3, 0.3]);
             this.trianguleLinesVAO.render();
         }
 
-        if (this.polygonVAO) {
-            this.polygonShader.use();
-            this.polygonShader.uniform('MVP', modelViewProjectionMatrix);
-            this.polygonShader.uniform('color', [0.3, 0.3, 0.6, 0.1]);
+        if (this.polygonVAO && this.showPolygons) {
+            const shader = this.customPolygonShader || this.polygonShader;
+            shader.use();
+            shader.uniform('MVP', modelViewProjectionMatrix);
+            if (!this.customPolygonShader) {
+                shader.uniform('color', [0.3, 0.3, 0.6, 0.1]);
+            }
             this.polygonVAO.render();
         }
     }
 }
 
-export function createMeshRenderer(gl, polygonList) {
-    return new MeshRenderer(gl, polygonList);
+export function createMeshRenderer(gl, polygonList, options) {
+    return new MeshRenderer(gl, polygonList, options);
 }
 
 export function clamp(x, min, max) {
