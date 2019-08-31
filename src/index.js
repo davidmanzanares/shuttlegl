@@ -396,3 +396,5 @@ export function createMeshRenderer(gl, polygonList, options) {
 export function clamp(x, min, max) {
     return Math.max(Math.min(x, max), min);
 }
+
+export {loadWavefront} from './wavefront';
