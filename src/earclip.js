@@ -48,7 +48,11 @@ export function earclip(polygon) {
         const ear2 = eartip;
         const ear3 = eartip.next;
         //Push eartip to triangle list, the order is important to enable face culling
-        triangles.push(ear3, ear2, ear1);
+        if (ear1.reverse){
+            triangles.push(ear1, ear2, ear3);
+        }else{
+            triangles.push(ear3, ear2, ear1);
+        }
 
         //Check finish condition
         numVertices--;
@@ -122,6 +126,9 @@ function createDoublyLinkedListFrom3DvertexArray(array, ignoredPlane) {
     const C = new Vector3(u).cross(v);
     if (C.z > 0) {
         vertexListStorage.reverse();
+        for (let i = 0; i < vertexListStorage.length; i++) {
+            vertexListStorage[i].reverse = true;
+        }
     }
     if (C.z == 0) {
         throw new Error('Invalid input or internal error');
