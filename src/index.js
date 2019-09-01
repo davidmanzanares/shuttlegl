@@ -374,7 +374,7 @@ class MeshRenderer {
         this.trianguleLinesVAO = createVAOfromLineList(gl, trianguleLines);
         this.polygonVAO = createVAOfromPolygonList(gl, polygonList);
     }
-    render(modelViewProjectionMatrix, displayWidth, displayHeight) {
+    render(modelViewProjectionMatrix, displayWidth, displayHeight, {camera, model}) {
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
         this.gl.enable(this.gl.BLEND);
 
@@ -389,6 +389,9 @@ class MeshRenderer {
             shader.uniform('MVP', modelViewProjectionMatrix);
             if (!this.customPolygonShader) {
                 shader.uniform('color', [0.3, 0.3, 0.6, 0.1]);
+            }else{
+                shader.uniform('camera', camera);
+                shader.uniform('Model', model);
             }
             this.polygonVAO.render();
         }
