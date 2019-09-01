@@ -277,7 +277,9 @@ function compileShader(gl, sourceCode, type) {
 }
 
 class MeshRenderer {
-    constructor(gl, polygonList, {
+    constructor({
+        gl,
+        polygonList, 
         showPoints = true,
         showEdges = true,
         showTriangulationLines = true,
@@ -299,28 +301,40 @@ class MeshRenderer {
         this.customPolygonShader = customPolygonShader; //new Shader(gl, triangleFillVertexGLSL, triangleFillFragmentGLSL);
 
 
-        const points = polygonList.reduce((acc, x) => acc.concat(x));
+        const points = [];
+        debugger;
+
+        for (let i=0; i<polygonList.length; i++){
+            const polygon = polygonList[i];
+            for (let j=0; j<polygon.length; j++){
+                const v = polygon[j];
+                points.push(v.pos.x, v.pos.y, v.pos.z);
+            }
+        }
         this.pointVAO = createVAOfromPointList(gl, points);
 
         const lines = [];
-        polygonList.forEach(vertices => {
-            for (let i = 0; i < vertices.length / 3; i++) {
+        for (let i=0; i<polygonList.length; i++){
+            const polygon = polygonList[i];
+            for (let i = 0; i < polygon.length; i++) {
+                const v1 = polygon[i];
                 lines.push(
-                    vertices[3 * i],
-                    vertices[3 * i + 1],
-                    vertices[3 * i + 2],
+                    v1.pos.x,
+                    v1.pos.y,
+                    v1.pos.z,
                 )
                 let j = i + 1;
-                if (j === vertices.length / 3) {
+                if (j === polygon.length) {
                     j = 0;
                 }
+                const v2 = polygon[j];
                 lines.push(
-                    vertices[3 * j],
-                    vertices[3 * j + 1],
-                    vertices[3 * j + 2],
+                    v2.pos.x,
+                    v2.pos.y,
+                    v2.pos.z,
                 )
             }
-        });
+        }
         this.lineVAO = createVAOfromLineList(gl, lines);
 
         const triangleList = polygonList.flatMap(polygon => earclip(polygon));
@@ -389,8 +403,8 @@ class MeshRenderer {
     }
 }
 
-export function createMeshRenderer(gl, polygonList, options) {
-    return new MeshRenderer(gl, polygonList, options);
+export function createMeshRenderer(options) {
+    return new MeshRenderer(options);
 }
 
 export function clamp(x, min, max) {

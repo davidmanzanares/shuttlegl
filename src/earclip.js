@@ -4,9 +4,9 @@ export function earclip(polygon) {
     //Based on https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
     //O(N^2)
 
-    const a = new Vector3(polygon[0], polygon[1], polygon[2]);
-    const b = new Vector3(polygon[3], polygon[4], polygon[5]);
-    const c = new Vector3(polygon[6], polygon[7], polygon[8]);
+    const a = new Vector3(polygon[0].pos.x, polygon[0].pos.y, polygon[0].pos.z);
+    const b = new Vector3(polygon[1].pos.x, polygon[1].pos.y, polygon[1].pos.z);
+    const c = new Vector3(polygon[2].pos.x, polygon[2].pos.y, polygon[2].pos.z);
 
     const u = new Vector3(b).sub(a);
     const v = new Vector3(c).sub(b);
@@ -92,30 +92,30 @@ export function earclip(polygon) {
 function createDoublyLinkedListFrom3DvertexArray(array, ignoredPlane) {
     const vertexListStorage = [];
 
-    for (let i = 0; i < array.length / 3; i++) {
+    for (let i = 0; i < array.length; i++) {
         if (ignoredPlane === 'x') {
             vertexListStorage[i] = {
-                x: array[3 * i + 2],
-                y: array[3 * i + 1],
-                z: array[3 * i + 0],
+                x: array[i].pos.z,
+                y: array[i].pos.y,
+                z: array[i].pos.x,
                 prev: null,
                 next: null,
                 earListNode: null,
             };
         } else if (ignoredPlane === 'y') {
             vertexListStorage[i] = {
-                x: array[3 * i + 0],
-                y: array[3 * i + 2],
-                z: array[3 * i + 1],
+                x: array[i].pos.x,
+                y: array[i].pos.z,
+                z: array[i].pos.y,
                 prev: null,
                 next: null,
                 earListNode: null,
             };
         } else {
             vertexListStorage[i] = {
-                x: array[3 * i + 0],
-                y: array[3 * i + 1],
-                z: array[3 * i + 2],
+                x: array[i].pos.x,
+                y: array[i].pos.y,
+                z: array[i].pos.z,
                 prev: null,
                 next: null,
                 earListNode: null,
