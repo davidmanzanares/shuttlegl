@@ -48,22 +48,7 @@ export function earclip(polygon) {
         const ear2 = eartip;
         const ear3 = eartip.next;
         //Push eartip to triangle list, the order is important to enable face culling
-        if (ignoredPlane === 'x') {
-            triangles.push(
-                ear3.z, ear3.y, ear3.x,
-                ear2.z, ear2.y, ear2.x,
-                ear1.z, ear1.y, ear1.x);
-        } else if (ignoredPlane === 'y') {
-            triangles.push(
-                ear3.x, ear3.z, ear3.y,
-                ear2.x, ear2.z, ear2.y,
-                ear1.x, ear1.z, ear1.y);
-        } else {
-            triangles.push(
-                ear3.x, ear3.y, ear3.z,
-                ear2.x, ear2.y, ear2.z,
-                ear1.x, ear1.y, ear1.z);
-        }
+        triangles.push(ear3, ear2, ear1);
 
         //Check finish condition
         numVertices--;
@@ -95,6 +80,7 @@ function createDoublyLinkedListFrom3DvertexArray(array, ignoredPlane) {
     for (let i = 0; i < array.length; i++) {
         if (ignoredPlane === 'x') {
             vertexListStorage[i] = {
+                ...array[i],
                 x: array[i].pos.z,
                 y: array[i].pos.y,
                 z: array[i].pos.x,
@@ -104,6 +90,7 @@ function createDoublyLinkedListFrom3DvertexArray(array, ignoredPlane) {
             };
         } else if (ignoredPlane === 'y') {
             vertexListStorage[i] = {
+                ...array[i],
                 x: array[i].pos.x,
                 y: array[i].pos.z,
                 z: array[i].pos.y,
@@ -113,6 +100,7 @@ function createDoublyLinkedListFrom3DvertexArray(array, ignoredPlane) {
             };
         } else {
             vertexListStorage[i] = {
+                ...array[i],
                 x: array[i].pos.x,
                 y: array[i].pos.y,
                 z: array[i].pos.z,

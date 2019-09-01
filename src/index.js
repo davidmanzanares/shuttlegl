@@ -24,7 +24,7 @@ class VAO {
         gl.enableVertexAttribArray(0);
 
         this.extraVertexBuffers = [];
-        extraVertexAttributes.forEach((extraVertexAttrib, i) => {
+            extraVertexAttributes.forEach((extraVertexAttrib, i) => {
             this.extraVertexBuffers.push(gl.createBuffer());
             gl.bindBuffer(gl.ARRAY_BUFFER, this.extraVertexBuffers[i]);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(extraVertexAttrib), gl.STATIC_DRAW);
@@ -122,7 +122,14 @@ class View {
 
 export function createVAOfromPolygonList(gl, polygonList) {
     const triangleList = polygonList.flatMap(polygon => earclip(polygon));
-    return new VAO(gl, triangleList);
+    const vertexList = [];
+    const normalList = [];
+    for (let i=0; i<triangleList.length; i++){
+        const t = triangleList[i];
+        vertexList.push(t.pos.x, t.pos.y, t.pos.z);
+        normalList.push(t.normal.x, t.normal.y, t.normal.z);
+    }
+    return new VAO(gl, vertexList, normalList);
 }
 export function createVAOfromPointList(gl, pointList) {
     let triangleList = [];
@@ -292,7 +299,6 @@ class MeshRenderer {
         this.lineShader = createShaderLine(gl);
         this.polygonShader = createShaderPolygon(gl);
 
-
         this.showPoints = showPoints;
         this.showEdges = showEdges;
         this.showTriangulationLines = showTriangulationLines;
@@ -302,7 +308,6 @@ class MeshRenderer {
 
 
         const points = [];
-        debugger;
 
         for (let i=0; i<polygonList.length; i++){
             const polygon = polygonList[i];
@@ -339,32 +344,31 @@ class MeshRenderer {
 
         const triangleList = polygonList.flatMap(polygon => earclip(polygon));
         const trianguleLines = [];
-        for (let i = 0; i < triangleList.length / 9; i++) {
+        for (let i = 0; i < triangleList.length / 3; i++) {
             trianguleLines.push(
-                triangleList[9 * i + 0],
-                triangleList[9 * i + 1],
-                triangleList[9 * i + 2],
-                triangleList[9 * i + 3],
-                triangleList[9 * i + 4],
-                triangleList[9 * i + 5],
+                triangleList[3 * i].pos.x,
+                triangleList[3 * i].pos.y,
+                triangleList[3 * i].pos.z,
+                triangleList[3 * i + 1].pos.x,
+                triangleList[3 * i + 1].pos.y,
+                triangleList[3 * i + 1].pos.z,
 
-                triangleList[9 * i + 3],
-                triangleList[9 * i + 4],
-                triangleList[9 * i + 5],
-                triangleList[9 * i + 6],
-                triangleList[9 * i + 7],
-                triangleList[9 * i + 8],
+                triangleList[3 * i + 1].pos.x,
+                triangleList[3 * i + 1].pos.y,
+                triangleList[3 * i + 1].pos.z,
+                triangleList[3 * i + 2].pos.x,
+                triangleList[3 * i + 2].pos.y,
+                triangleList[3 * i + 2].pos.z,
 
-                triangleList[9 * i + 6],
-                triangleList[9 * i + 7],
-                triangleList[9 * i + 8],
-                triangleList[9 * i + 0],
-                triangleList[9 * i + 1],
-                triangleList[9 * i + 2],
+                triangleList[3 * i + 2].pos.x,
+                triangleList[3 * i + 2].pos.y,
+                triangleList[3 * i + 2].pos.z,
+                triangleList[3 * i].pos.x,
+                triangleList[3 * i].pos.y,
+                triangleList[3 * i].pos.z,
             )
         }
         this.trianguleLinesVAO = createVAOfromLineList(gl, trianguleLines);
-
         this.polygonVAO = createVAOfromPolygonList(gl, polygonList);
     }
     render(modelViewProjectionMatrix, displayWidth, displayHeight) {
