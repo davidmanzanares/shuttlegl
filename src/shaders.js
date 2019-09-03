@@ -8,6 +8,7 @@ in vec3 vertexB;
 
 uniform mat4 MVP;
 uniform vec2 lineSize;
+uniform float zOffset;
 
 out vec3 va;
 out vec3 vb;
@@ -34,6 +35,7 @@ void main(void) {
   va = vertexA;
   vb = vertexB;
 
+  vertex.z+=zOffset;
   gl_Position = vertex + vec4(uv*2.*lineSize*vertex.w, 0., 0.);
 }
 `;
@@ -100,7 +102,7 @@ in vec3 vertex;
 
 uniform mat4 MVP;
 uniform vec2 pointSize;
-
+uniform float zOffset;
 out vec2 uv;
 
 void main(void) {
@@ -113,6 +115,7 @@ void main(void) {
     uv = vec2(-0.866, -0.5);
   }
   vec4 vertex = (MVP * vec4(vertex, 1.));
+  vertex.z+=zOffset;
   gl_Position = vertex + vec4(uv*2.*pointSize*vertex.w, 0., 0.);
 }
 `;
