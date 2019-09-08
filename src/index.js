@@ -378,10 +378,7 @@ class MeshRenderer {
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
         this.gl.enable(this.gl.BLEND);
 
-        this.gl.cullFace(this.gl.FRONT);
-        this.gl.enable(this.gl.CULL_FACE);
         this.gl.enable(this.gl.DEPTH_TEST);
-//        this.gl.depthFunc(this.gl.LEQUAL);
 
         if (this.polygonVAO && this.showPolygons) {
             const shader = this.customPolygonShader || this.polygonShader;
@@ -396,13 +393,10 @@ class MeshRenderer {
             this.polygonVAO.render();
         }
 
-      this.gl.polygonOffset(0, 1);
-        this.gl.disable(this.gl.CULL_FACE);
-
         if (this.pointVAO && this.showPoints) {
             this.pointShader.use();
             this.pointShader.uniform('MVP', modelViewProjectionMatrix);
-            this.pointShader.uniform('pointSize', [1 / displayWidth, 1 / displayHeight].map(x => x * 14.));
+            this.pointShader.uniform('pointSize', [1 / displayWidth, 1 / displayHeight].map(x => x * 5.));
             this.pointShader.uniform('color', [0.01, 0.01, 0.01, 1]);
             this.pointShader.uniform('zOffset', -0.00003);
             this.pointVAO.render();
@@ -411,7 +405,7 @@ class MeshRenderer {
         if (this.lineVAO && this.showEdges) {
             this.lineShader.use();
             this.lineShader.uniform('MVP', modelViewProjectionMatrix);
-            this.lineShader.uniform('lineSize', [1 / displayWidth, 1 / displayHeight].map(x => x * 2.));
+            this.lineShader.uniform('lineSize', [1 / displayWidth, 1 / displayHeight].map(x => x * 1.));
             this.lineShader.uniform('color', [0.9, 0.1, 0.01, 0.8]);
             this.lineShader.uniform('zOffset', -0.00001);
             this.lineVAO.render();
