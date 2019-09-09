@@ -1,19 +1,19 @@
-import { Vector3 } from "math.gl";
+import vec3 from './vector3';
 
 export function earclip(polygon) {
     //Based on https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
     //O(N^2)
 
-    const a = new Vector3(polygon[0].pos.x, polygon[0].pos.y, polygon[0].pos.z);
-    const b = new Vector3(polygon[1].pos.x, polygon[1].pos.y, polygon[1].pos.z);
-    const c = new Vector3(polygon[2].pos.x, polygon[2].pos.y, polygon[2].pos.z);
+    const a = vec3(polygon[0].pos.x, polygon[0].pos.y, polygon[0].pos.z);
+    const b = vec3(polygon[1].pos.x, polygon[1].pos.y, polygon[1].pos.z);
+    const c = vec3(polygon[2].pos.x, polygon[2].pos.y, polygon[2].pos.z);
 
-    const u = new Vector3(b).sub(a);
-    const v = new Vector3(c).sub(b);
+    const u = b.sub(a);
+    const v = c.sub(b);
 
-    const cross = new Vector3(u).cross(v);
-    const crossAbs = cross.map(Math.abs);
-    const index = crossAbs.findIndex(x => x === Math.max(...crossAbs));
+    const cross = u.cross(v);
+    const crossAbs = cross.abs();
+    const index = crossAbs.array().findIndex(x => x === Math.max(...crossAbs.array()));
     const ignoredPlane = index === 0 ?
         'x'
         : index === 1 ? 'y' : 'z';
@@ -116,14 +116,14 @@ function createDoublyLinkedListFrom3DvertexArray(array, ignoredPlane) {
     }
 
     // if the first polygon is clockwise, we need to reverse it
-    const a = new Vector3(vertexListStorage[0].x, vertexListStorage[0].y, 0);
-    const b = new Vector3(vertexListStorage[1].x, vertexListStorage[1].y, 0);
-    const c = new Vector3(vertexListStorage[2].x, vertexListStorage[2].y, 0);
+    const a = vec3(vertexListStorage[0].x, vertexListStorage[0].y, 0);
+    const b = vec3(vertexListStorage[1].x, vertexListStorage[1].y, 0);
+    const c = vec3(vertexListStorage[2].x, vertexListStorage[2].y, 0);
 
-    const u = new Vector3(b).sub(a);
-    const v = new Vector3(c).sub(b);
+    const u = b.sub(a);
+    const v = c.sub(b);
 
-    const C = new Vector3(u).cross(v);
+    const C = u.cross(v);
     if (C.z > 0) {
         vertexListStorage.reverse();
         for (let i = 0; i < vertexListStorage.length; i++) {
