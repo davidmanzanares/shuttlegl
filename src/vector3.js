@@ -25,6 +25,12 @@ class Vector3 {
             this.x * other.y - this.y * other.x
         );
     }
+    min(other) {
+        return new Vector3(Math.min(this.x, other.x), Math.min(this.y, other.y), Math.min(this.z, other.z));
+    }
+    max(other) {
+        return new Vector3(Math.max(this.x, other.x), Math.max(this.y, other.y), Math.max(this.z, other.z));
+    }
     abs() {
         return new Vector3(Math.abs(this.x), Math.abs(this.y), Math.abs(this.z));
     }
