@@ -34,7 +34,32 @@ class Vector3 {
     abs() {
         return new Vector3(Math.abs(this.x), Math.abs(this.y), Math.abs(this.z));
     }
+    negated() {
+        return new Vector3(-this.x, -this.y, -this.z);
+    }
+    multiplyByScalar(k) {
+        return new Vector3(k * this.x, k * this.y, k * this.z);
+    }
+    divideByScalar(k) {
+        k = 1 / k;
+        return new Vector3(k * this.x, k * this.y, k * this.z);
+    }
     array() {
         return [this.x, this.y, this.z];
+    }
+    length() {
+        return Math.sqrt(this.dot(this));
+    }
+    normalize(){
+        return this.divideByScalar(this.length());
+    }
+
+    // Perform linear interpolation (aka "lerp")
+    mix(other, t) {
+        // a+(b-a)*t = a*t+b*(1-t)
+        return new Vector3(
+            this.x + (other.x - this.x) * t,
+            this.y + (other.y - this.y) * t,
+            this.z + (other.z - this.z) * t);
     }
 }
