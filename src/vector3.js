@@ -50,8 +50,14 @@ class Vector3 {
     length() {
         return Math.sqrt(this.dot(this));
     }
-    normalize(){
+    normalize() {
         return this.divideByScalar(this.length());
+    }
+    equal(other) {
+        return this.x == other.x && this.y == other.y && this.z == other.z;
+    }
+    copy(){
+        return new Vector3(this.x, this.y, this.z);
     }
 
     // Perform linear interpolation (aka "lerp")
