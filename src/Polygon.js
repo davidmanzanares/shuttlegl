@@ -9,6 +9,12 @@ export class Polygon {
         this.plane = plane || planeFromPoints(vertices[0].pos, vertices[1].pos, vertices[2].pos);
     }
 
+    invert() { 
+        this.vertices.reverse().forEach(v => { v.flip(); });
+        this.plane = this.plane.flip();
+        return this;
+    }
+
     // `epsilon` is the tolerance used by `splitPolygon()` to decide if a
     // point is on the plane.
     splitPolygon (plane, coplanarFront, coplanarBack, front, back, epsilon = 1e-5) {
