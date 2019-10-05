@@ -10,7 +10,7 @@ export class Polygon {
     }
 
     invert() { 
-        this.vertices.reverse().forEach(v => { v.flip(); });
+        this.vertices.reverse().map(v=>v.clone()).forEach(v => { v.flip(); });
         this.plane = this.plane.flip();
         return this;
     }
