@@ -15,6 +15,9 @@ class Vector3 {
     sub(other) {
         return new Vector3(this.x - other.x, this.y - other.y, this.z - other.z);
     }
+    mul(other) {
+        return new Vector3(this.x * other.x, this.y * other.y, this.z * other.z);
+    }
     dot(other) {
         return this.x * other.x + this.y * other.y + this.z * other.z;
     }
