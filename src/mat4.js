@@ -79,9 +79,9 @@ export function rotationZMatrix(r){
 }
 
 export function rotationMatrix(rotation){
-    const rx = rotationXMatrix(rotation.x);
-    const ry = rotationYMatrix(rotation.y);
-    const rz = rotationZMatrix(rotation.z);
+    const rx = rotationXMatrix(rotation.x/180*Math.PI);
+    const ry = rotationYMatrix(rotation.y/180*Math.PI);
+    const rz = rotationZMatrix(rotation.z/180*Math.PI);
     return rx.mul(ry).mul(rz);
 }
 
