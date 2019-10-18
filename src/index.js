@@ -75,6 +75,16 @@ class View {
         this.verticalRotation = verticalRotation;
     }
 
+    serialize(){
+        return JSON.stringify({
+            x: this.camera.x,
+            y: this.camera.y,
+            z: this.camera.z,
+            h: this.horizontalRotation,
+            v: this.verticalRotation
+        })
+    }
+
     moveForward(dx) {
         const movement = this.getForwardDirection().scale(dx);
         this.camera.add(movement);
@@ -264,6 +274,11 @@ export function compileProgram(gl, glslvertexShader, glslfragmentShader) {
 
 export function createView(...args) {
     return new View(...args)
+}
+
+export function viewDeserialize(str){
+    const o = JSON.parse(str);
+    return createView([o.x, o.y, o.z], o.h, o.v);
 }
 
 function compileShader(gl, sourceCode, type) {
