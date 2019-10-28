@@ -40,7 +40,9 @@ export function earclip(polygon) {
     const triangles = [];
     while (true) {
         if (earListHead == null) {
-            throw new Error("Invalid input polygon or internal error");
+            //throw new Error("Invalid input polygon or internal error");
+            console.warn("Invalid input polygon or internal error");
+            return [];
         }
         const eartip = earListHead.v;
 

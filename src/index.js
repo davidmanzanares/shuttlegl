@@ -24,7 +24,7 @@ class VAO {
         gl.enableVertexAttribArray(0);
 
         this.extraVertexBuffers = [];
-            extraVertexAttributes.forEach((extraVertexAttrib, i) => {
+        extraVertexAttributes.forEach((extraVertexAttrib, i) => {
             this.extraVertexBuffers.push(gl.createBuffer());
             gl.bindBuffer(gl.ARRAY_BUFFER, this.extraVertexBuffers[i]);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(extraVertexAttrib), gl.STATIC_DRAW);
@@ -75,7 +75,7 @@ class View {
         this.verticalRotation = verticalRotation;
     }
 
-    serialize(){
+    serialize() {
         return JSON.stringify({
             x: this.camera.x,
             y: this.camera.y,
@@ -133,11 +133,19 @@ class View {
 
 
 export function createVAOfromPolygonList(gl, polygonList) {
-    const triangleList = polygonList.flatMap(polygon => earclip(polygon));
+    const triangleList = polygonList.flatMap(polygon => {
+        try {
+            const l = earclip(polygon);
+            return l;
+        } catch (e) {
+            console.warn(e);
+            return [];
+        }
+    });
 
     const vertexList = [];
     const normalList = [];
-    for (let i=0; i<triangleList.length; i++){
+    for (let i = 0; i < triangleList.length; i++) {
         const t = triangleList[i];
         vertexList.push(t.pos.x, t.pos.y, t.pos.z);
         normalList.push(t.normal.x, t.normal.y, t.normal.z);
@@ -238,7 +246,7 @@ export function createShaderPolygon(gl) {
     return new Shader(gl, triangleFillVertexGLSL, triangleFillFragmentGLSL);
 }
 
-export function createShader(gl, vertexGLSL, fragmentGLSL){
+export function createShader(gl, vertexGLSL, fragmentGLSL) {
     return new Shader(gl, vertexGLSL, fragmentGLSL);
 }
 
@@ -276,7 +284,7 @@ export function createView(...args) {
     return new View(...args)
 }
 
-export function viewDeserialize(str){
+export function viewDeserialize(str) {
     const o = JSON.parse(str);
     return createView([o.x, o.y, o.z], o.h, o.v);
 }
@@ -304,7 +312,7 @@ function compileShader(gl, sourceCode, type) {
 class MeshRenderer {
     constructor({
         gl,
-        polygonList, 
+        polygonList,
         showPoints = true,
         showEdges = true,
         showTriangulationLines = true,
@@ -327,9 +335,9 @@ class MeshRenderer {
 
         const points = [];
 
-        for (let i=0; i<polygonList.length; i++){
+        for (let i = 0; i < polygonList.length; i++) {
             const polygon = polygonList[i];
-            for (let j=0; j<polygon.length; j++){
+            for (let j = 0; j < polygon.length; j++) {
                 const v = polygon[j];
                 points.push(v.pos.x, v.pos.y, v.pos.z);
             }
@@ -337,7 +345,7 @@ class MeshRenderer {
         this.pointVAO = createVAOfromPointList(gl, points);
 
         const lines = [];
-        for (let i=0; i<polygonList.length; i++){
+        for (let i = 0; i < polygonList.length; i++) {
             const polygon = polygonList[i];
             for (let i = 0; i < polygon.length; i++) {
                 const v1 = polygon[i];
@@ -360,7 +368,16 @@ class MeshRenderer {
         }
         this.lineVAO = createVAOfromLineList(gl, lines);
 
-        const triangleList = polygonList.flatMap(polygon => earclip(polygon));
+        const triangleList = polygonList.flatMap(polygon => {
+            try {
+                const l = earclip(polygon);
+                return l;
+            } catch (e) {
+                console.warn(e);
+                return [];
+            }
+        });
+
         const trianguleLines = [];
         for (let i = 0; i < triangleList.length / 3; i++) {
             trianguleLines.push(
@@ -389,7 +406,7 @@ class MeshRenderer {
         this.trianguleLinesVAO = createVAOfromLineList(gl, trianguleLines);
         this.polygonVAO = createVAOfromPolygonList(gl, polygonList);
     }
-    render(modelViewProjectionMatrix, displayWidth, displayHeight, {camera, model}) {
+    render(modelViewProjectionMatrix, displayWidth, displayHeight, { camera, model }) {
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
         this.gl.enable(this.gl.BLEND);
 
@@ -401,7 +418,7 @@ class MeshRenderer {
             shader.uniform('MVP', modelViewProjectionMatrix);
             if (!this.customPolygonShader) {
                 shader.uniform('color', [0.3, 0.3, 0.6, 0.1]);
-            }else{
+            } else {
                 shader.uniform('camera', camera);
                 shader.uniform('Model', model);
             }
@@ -445,4 +462,4 @@ export function clamp(x, min, max) {
     return Math.max(Math.min(x, max), min);
 }
 
-export {loadWavefront} from './wavefront';
+export { loadWavefront } from './wavefront';
