@@ -17,7 +17,7 @@ export class Polygon {
 
     // `epsilon` is the tolerance used by `splitPolygon()` to decide if a
     // point is on the plane.
-    splitPolygon(plane, coplanarFront, coplanarBack, front, back, epsilon = 1e-5) {
+    splitPolygon(plane, coplanarFront, coplanarBack, front, back, epsilon = 1e-5, spanning) {
         const COPLANAR = 0;
         const FRONT = 1;
         const BACK = 2;
@@ -39,7 +39,7 @@ export class Polygon {
         if (types.length < this.vertices.length) {
             types = new Uint8Array(this.vertices.length);
         }
-        epsilon=0.00000001;
+
         const eps = epsilon
         if (epsilon === null && Math.abs(this.plane.normal.dot(plane.normal)) > 0.999) {
             /*if (plane.w > this.plane.w) {
@@ -55,9 +55,6 @@ export class Polygon {
         for (let i = 0; i < this.vertices.length; i++) {
             const t = plane.normal.dot(this.vertices[i].pos) - plane.w;
             let type = (t < -epsilon) ? BACK : (t > epsilon) ? FRONT : COPLANAR;
-            if (epsilon === null){
-                //type = t<0?BACK:FRONT;
-            }
             polygonType |= type;
             types[i] = type;
         }
@@ -95,6 +92,7 @@ export class Polygon {
                 }
                 if (f.length >= 3) front.push(new Polygon(f, this.shared, this.plane));
                 if (b.length >= 3) back.push(new Polygon(b, this.shared, this.plane));
+                spanning.push(this);
                 break;
         }
     }
