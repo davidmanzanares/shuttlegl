@@ -2,6 +2,8 @@ import Cache from './cache';
 import { triangleFillVertexGLSL, triangleFillFragmentGLSL, pointVertexGLSL, pointFragmentGLSL, lineVertexGLSL, lineFragmentGLSL } from './shaders';
 import { Matrix3, Matrix4, Vector3 } from 'math.gl';
 import { earclip } from './earclip';
+import vec3 from './vector3';
+import {mat4LookAt} from './mat4';
 
 // Parts of the code copied and/or modified from https://github.com/CartoDB/carto-vl/blob/master/src/renderer/shaders/utils.js
 // licensed under the BSD-3 license
@@ -50,6 +52,9 @@ class Shader {
     }
     uniform(name, value) {
         const location = this.gl.getUniformLocation(this.program, name);
+        if (value.list){
+            value = value.list;
+        }
         if (typeof value === 'number') {
             this.gl.uniform1f(location, value);
         } else if (value.length === 2) {
@@ -125,8 +130,7 @@ class View {
             center: this.getForwardDirection().add(this.camera),
             up: this.getUpDirection()
         };
-        const viewMatrix = (new Matrix4()).lookAt(view);
-        return viewMatrix;
+        return mat4LookAt(view);
     }
 }
 
@@ -405,6 +409,17 @@ class MeshRenderer {
         }
         this.trianguleLinesVAO = createVAOfromLineList(gl, trianguleLines);
         this.polygonVAO = createVAOfromPolygonList(gl, polygonList);
+
+        this.polygonTriangleList = polygonList.flatMap(polygon => {
+            try {
+                const l = earclip(polygon);
+                l.forEach(t=>{t.originalPoly = polygon});
+                return l;
+            } catch (e) {
+                console.warn(e);
+                return [];
+            }
+        });
     }
     render(modelViewProjectionMatrix, displayWidth, displayHeight, { camera, model }) {
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
@@ -452,6 +467,71 @@ class MeshRenderer {
             this.trianguleLinesVAO.render();
         }
     }
+    trace(pixelCoord, mvp, fov, camera){
+        // Transform to NDC
+        try{
+
+        const ndc = {
+            x: pixelCoord.x*2-1,
+            y: pixelCoord.y*2-1
+        }
+        const ro = camera;
+        const rd = mvp.mulVec3(vec3(ndc.x, ndc.y, fov).normalize());
+        // Project NDC to ray dir with MVP matrix
+        // tris.map(interSection).reduce(closestIntersection)
+        let closestTriangle;
+        let distance = Number.POSITIVE_INFINITY;
+        for (let i=0; i<this.polygonTriangleList.length; i+=3){
+            const tri = [
+                this.polygonTriangleList[i],
+                this.polygonTriangleList[i+1],
+                this.polygonTriangleList[i+2]
+            ];
+            const d = rayTriangleIntersect(ro, rd, tri);
+            if (d!==null && d > 0 && d < distance){
+                distance = d;
+                closestTriangle = {
+                    index: i,
+                    tri,
+                };
+            }
+        }
+        console.log(distance, closestTriangle);
+        // return triToPoly(p);
+        return null;
+    }catch(err){
+        console.warn(err);
+    }
+
+    }
+}
+
+// returns distance to triangle or null if the ray doesn't intersects
+function rayTriangleIntersect(ro, rd, triangle){
+    const [p0, p1, p2] = triangle.map(x => vec3(x.pos.x, x.pos.y, x.pos.z));
+    ro = vec3(ro.x, ro.y, ro.z);
+    rd = vec3(rd.x, rd.y, rd.z);
+    const e1 = p1.sub(p0);
+    const e2 = p2.sub(p0);
+    const q = rd.cross(e2);
+    const a = e1.dot(q);
+    const eps = 1e-5;
+    if (a > -eps && a < eps){
+        return null;
+    }
+    const f = 1 / a;
+    const s = ro.sub(p0);
+    const u = f * (s.dot(q));
+    if (u<0){
+        return null;
+    }
+    const r = s.cross(e1);
+    const v = f*(rd.dot(r));
+    if (v <0 || (u+v) > 1){
+        return null;
+    }
+    const t = f* (e2.dot(r));
+    return t;
 }
 
 export function createMeshRenderer(options) {
