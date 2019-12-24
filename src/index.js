@@ -421,7 +421,7 @@ class MeshRenderer {
             }
         });
     }
-    render(modelViewProjectionMatrix, displayWidth, displayHeight, { camera, model }) {
+    render(modelViewProjectionMatrix, displayWidth, displayHeight, { camera, model, aux }) {
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
         this.gl.enable(this.gl.BLEND);
 
@@ -436,6 +436,9 @@ class MeshRenderer {
             } else {
                 shader.uniform('camera', camera);
                 shader.uniform('Model', model);
+                if (aux){
+                    shader.uniform('aux', aux);
+                }
             }
             this.polygonVAO.render();
         }
@@ -467,16 +470,20 @@ class MeshRenderer {
             this.trianguleLinesVAO.render();
         }
     }
-    trace(pixelCoord, mvp, fov, camera){
+    trace(pixelCoord, mvp, fov, camera, ao){
         // Transform to NDC
         try{
-
         const ndc = {
             x: pixelCoord.x*2-1,
             y: pixelCoord.y*2-1
         }
-        const ro = camera;
-        const rd = mvp.mulVec3(vec3(ndc.x, ndc.y, fov).normalize());
+        console.log(ndc, ao);
+        let ro = camera;
+        const v3 = vec3(ndc.x*ao*ao, ndc.y, 1.).normalize();
+        const tmp = mvp.mulVec4([v3.x, v3.y, v3.z, 0]);
+        let rd = vec3(...tmp);
+        ro = vec3(ro.x, ro.y, ro.z);
+        rd = vec3(rd.x, rd.y, rd.z);
         // Project NDC to ray dir with MVP matrix
         // tris.map(interSection).reduce(closestIntersection)
         let closestTriangle;
@@ -496,9 +503,10 @@ class MeshRenderer {
                 };
             }
         }
-        console.log(distance, closestTriangle);
-        // return triToPoly(p);
-        return null;
+        const point = ro.add(rd.multiplyByScalar(distance));
+        return {
+            distance, closestTriangle,point
+        };
     }catch(err){
         console.warn(err);
     }
@@ -509,8 +517,6 @@ class MeshRenderer {
 // returns distance to triangle or null if the ray doesn't intersects
 function rayTriangleIntersect(ro, rd, triangle){
     const [p0, p1, p2] = triangle.map(x => vec3(x.pos.x, x.pos.y, x.pos.z));
-    ro = vec3(ro.x, ro.y, ro.z);
-    rd = vec3(rd.x, rd.y, rd.z);
     const e1 = p1.sub(p0);
     const e2 = p2.sub(p0);
     const q = rd.cross(e2);
